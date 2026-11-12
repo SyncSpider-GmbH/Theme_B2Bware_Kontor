@@ -1,0 +1,615 @@
+/* Kontor loads two Google Fonts for its default look. Must stay at the very
+ * top: CSS requires @import before any style rule. A store that picks its own
+ * fonts in Store setup > Appearance overrides the font tokens below. */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap");
+
+/* ============================================================================
+ * Kontor: classic commerce theme for B2Bware
+ *
+ * Loaded AFTER the platform base.css and AFTER the Appearance block of the
+ * store. Rule for this file: every colour, font and radius is either
+ *   (a) a DEFAULT inside `@layer theme-defaults` (Appearance always wins), or
+ *   (b) a structural rule that reads the tokens through var(--color-*).
+ * Never declare a --brand-* token or a font in a plain :root here, and never
+ * hard-code a colour on a selector: both would switch off Store settings.
+ * Reference: docs/tokens.md section 11.8.1.
+ * ============================================================================ */
+
+@layer theme-defaults {
+    :root {
+        --font-primary: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --font-secondary: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+        --brand-radius: 0.375rem;
+        --brand-container-desktop: 1360px;
+
+        /* Primary: green ramp anchored on #087a55 (white text on it: 5.35:1). */
+        --brand-color-primary-50:  #e9f6f1;
+        --brand-color-primary-100: #cdeadf;
+        --brand-color-primary-200: #9bd5bf;
+        --brand-color-primary-300: #5fb999;
+        --brand-color-primary-400: #2a9a74;
+        --brand-color-primary-500: #087a55;
+        --brand-color-primary-600: #076848;
+        --brand-color-primary-700: #06553b;
+        --brand-color-primary-800: #04402c;
+        --brand-color-primary-content: #ffffff;
+
+        /* Secondary: navy ramp, 800 (#181e35) is the top bar and footer. */
+        --brand-color-secondary-50:  #eef0f5;
+        --brand-color-secondary-100: #dcdfe9;
+        --brand-color-secondary-200: #b9bfd2;
+        --brand-color-secondary-300: #8a92ad;
+        --brand-color-secondary-400: #5a6386;
+        --brand-color-secondary-500: #343c5e;
+        --brand-color-secondary-600: #262d4b;
+        --brand-color-secondary-700: #1f2540;
+        --brand-color-secondary-800: #181e35;
+        --brand-color-secondary-content: #ffffff;
+    }
+
+    /* Light-scheme-only surface and text defaults. Scoped away from .dark so
+     * they can never replace the dark palette of the platform. */
+    :root:not(.dark) {
+        --brand-color-surface-page: #f4f7fa;
+        --brand-color-headings: #181e35;
+        --brand-color-body: #535461;
+    }
+
+    /* Subtle primary stops mixed toward the dark page (docs/tokens.md 11.10). */
+    :root.dark {
+        --brand-color-primary-50:  #10221c;
+        --brand-color-primary-100: #143329;
+    }
+}
+
+:root.dark {
+    /* The platform base.css ships a complete dark palette (page + card
+     * surfaces, text, borders, inputs, status subtles) under `.dark`, so the
+     * whole storefront re-skins straight from the design tokens with no
+     * per-element overrides. Hint native form controls / scrollbars for dark,
+     * and redeclare any `--brand-*` token here to tune individual values. */
+    color-scheme: dark;
+}
+
+/* ----------------------------------------------------------------------------
+ * Light/dark asset swaps
+ *
+ * The logo (header, footer, login) and the header theme-toggle each ship a
+ * light and a dark variant in the markup; CSS shows the one matching the
+ * active `.dark` root class. Done in plain CSS (not `dark:` utilities) so it
+ * is served live with NO base.css rebuild and flips the instant the root
+ * class changes (server render, no-FOUC script, or live JS toggle).
+ *
+ * A logo without a dark variant ships no `--light` class, so it stays visible
+ * in both schemes.
+ * -------------------------------------------------------------------------- */
+.storefront-logo--dark { display: none; }
+:root.dark .storefront-logo--light { display: none; }
+:root.dark .storefront-logo--dark { display: block; }
+
+.theme-toggle__to-light { display: none; }
+:root.dark .theme-toggle__to-dark { display: none; }
+:root.dark .theme-toggle__to-light { display: inline-flex; }
+
+/* ----------------------------------------------------------------------------
+ * Form controls — checkboxes
+ *
+ * The platform base.css ships native, browser-default checkboxes which read
+ * small and inconsistent across the storefront. Re-skin every storefront
+ * checkbox to match the B2B template (Figma): a larger rounded box with a
+ * subtle border + shadow that fills with the brand primary and shows a white
+ * check when selected. Colors reference the design tokens, so per-customer
+ * branding (which overrides `--color-primary`) recolors the checked state too.
+ *
+ * `:not(.sr-only)` leaves visually-hidden checkboxes untouched — those may
+ * drive custom visually-hidden patterns and must keep their native clipped box.
+ * -------------------------------------------------------------------------- */
+.storefront input[type="checkbox"]:not(.sr-only) {
+    appearance: none;
+    -webkit-appearance: none;
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--color-border-subtle, #e5e8ee);
+    border-radius: 0.375rem;
+    background-color: var(--color-surface-card, #ffffff);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.storefront input[type="checkbox"]:not(.sr-only):checked {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary);
+}
+
+/* The check is masked rather than baked into the data URI so its colour comes
+ * from --color-primary-content: a hardcoded white glyph disappears on a light
+ * brand colour (a gold primary scores 1.65:1 against white). */
+.storefront input[type="checkbox"]:not(.sr-only):checked::after {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-primary-content);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E") center / 1rem no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E") center / 1rem no-repeat;
+}
+
+.storefront input[type="checkbox"]:not(.sr-only):focus-visible {
+    outline: 2px solid var(--color-primary, #087a55);
+    outline-offset: 2px;
+}
+
+.storefront input[type="checkbox"]:not(.sr-only):disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* ----------------------------------------------------------------------------
+ * Form controls — radio buttons
+ *
+ * Mirror the checkbox skin so every storefront radio is the same 24px control:
+ * a circle that fills with the brand primary and shows a white center dot when
+ * selected. Colors reference the design tokens, so per-customer branding
+ * recolors the checked state too. `:not(.sr-only)` leaves visually-hidden radios
+ * untouched. Native browser radios can't be resized reliably, so the size unification
+ * requested for the storefront requires this `appearance: none` re-skin.
+ * -------------------------------------------------------------------------- */
+.storefront input[type="radio"]:not(.sr-only) {
+    appearance: none;
+    -webkit-appearance: none;
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--color-border-subtle, #e5e8ee);
+    border-radius: 9999px;
+    background-color: var(--color-surface-card, #ffffff);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.storefront input[type="radio"]:not(.sr-only):checked {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary);
+}
+
+/* Masked for the same contrast reason as the checkbox check above. */
+.storefront input[type="radio"]:not(.sr-only):checked::after {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-primary-content);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='4.5' fill='black'/%3E%3C/svg%3E") center / 1rem no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='4.5' fill='black'/%3E%3C/svg%3E") center / 1rem no-repeat;
+}
+
+.storefront input[type="radio"]:not(.sr-only):focus-visible {
+    outline: 2px solid var(--color-primary, #087a55);
+    outline-offset: 2px;
+}
+
+.storefront input[type="radio"]:not(.sr-only):disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* ----------------------------------------------------------------------------
+ * Form controls — select / dropdown
+ *
+ * Replace the browser's native dropdown arrow (tiny, unpositioned, and
+ * inconsistent across OS/browser) with a custom chevron that is:
+ *   - a consistent 1.125 rem (≈18 px), slightly larger than the default 16 px
+ *     indicator most browsers render;
+ *   - positioned 0.75 rem from the right border (not flush against the edge).
+ *
+ * `padding-right: 2.5rem` reserves space so option text never overlaps the
+ * arrow (icon right-edge at 0.75 rem + icon width 1.125 rem = 1.875 rem,
+ * plus ~0.625 rem breathing room). The rule's specificity (0,1,1) outranks
+ * Tailwind's `px-*` utilities (0,1,0) so the reserved space is always applied
+ * even when individual selects carry `px-2` or `px-3` utility classes.
+ *
+ * Dark-mode variant swaps the arrow to a lighter stroke so it stays legible
+ * against dark `surface-input` backgrounds.
+ * -------------------------------------------------------------------------- */
+.storefront select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234b5563' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.125rem;
+    padding-right: 2.5rem;
+    cursor: pointer;
+}
+
+:root.dark .storefront select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* ----------------------------------------------------------------------------
+ * Form controls — toggle switch (.sf-switch)
+ *
+ * A pill switch built from a visually-hidden (.sr-only) native checkbox plus a
+ * track whose ::after knob slides on :checked. The input stays .sr-only so it
+ * escapes the global checkbox re-skin above while remaining a real, focusable,
+ * form-submitting control (progressive enhancement: works with JS off). Colors
+ * reference the design tokens, so per-customer branding recolors the on-state.
+ * Used by the catalog-export column picker (switch + drag-to-reorder rows).
+ * -------------------------------------------------------------------------- */
+.sf-switch {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.sf-switch__track {
+    position: relative;
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    background-color: var(--color-border-subtle, #e5e8ee);
+    transition: background-color 0.15s ease;
+}
+
+.sf-switch__track::after {
+    content: "";
+    position: absolute;
+    top: 0.125rem;
+    left: 0.125rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background-color: var(--color-neutral-white, #ffffff);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
+    transition: transform 0.15s ease;
+}
+
+.sf-switch input:checked + .sf-switch__track {
+    background-color: var(--color-primary);
+}
+
+/* The knob rides ON the primary track once checked, so it takes the paired
+ * foreground — a fixed white knob vanishes on a light brand colour. */
+.sf-switch input:checked + .sf-switch__track::after {
+    background-color: var(--color-primary-content);
+    transform: translateX(1rem);
+}
+
+.sf-switch input:focus-visible + .sf-switch__track {
+    outline: 2px solid var(--color-primary, #087a55);
+    outline-offset: 2px;
+}
+
+.sf-switch input:disabled + .sf-switch__track {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ----------------------------------------------------------------------------
+ * Catalog-export preview table
+ *
+ * Styles the live preview table on the account catalog-export page. Kept as a
+ * component (rather than Tailwind utilities) because the platform base.css is
+ * prebuilt and does not ship the per-cell utilities this needs (vertical-align,
+ * last-row border reset). This file loads after base.css, so these rules win.
+ * -------------------------------------------------------------------------- */
+.sf-preview-table {
+    border-collapse: collapse;
+}
+
+.sf-preview-table th,
+.sf-preview-table td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--color-border-subtle, #e5e8ee);
+    text-align: left;
+    vertical-align: top;
+}
+
+.sf-preview-table thead th {
+    font-weight: 600;
+    color: var(--color-headings, #1a2233);
+    white-space: nowrap;
+}
+
+.sf-preview-table tbody td {
+    color: var(--color-body, #3b4252);
+}
+
+.sf-preview-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+
+/* ----------------------------------------------------------------------------
+ * Native <dialog> centering
+ *
+ * The platform base.css ships Tailwind's Preflight, whose universal
+ * `*, ::before, ::after { margin: 0 }` reset overrides the user-agent
+ * `dialog { margin: auto }` rule that centers an open modal dialog. Without
+ * this, every `showModal()` dialog (the canonical modal component plus the
+ * inlined checkout / account dialogs) renders pinned to the top-left corner.
+ * Re-assert the native centering here; an element selector outranks the `*`
+ * reset, and this file loads after base.css.
+ *
+ * NOTE FOR CUSTOM THEMES: this rule is NOT in the platform base.css, so every
+ * theme that uses `<dialog>` modals MUST re-declare it in its own stylesheet
+ * (see docs/blade-api.md §9 "Modals" and docs/styling.md §10.4).
+ * -------------------------------------------------------------------------- */
+dialog {
+    margin: auto;
+}
+
+/* ----------------------------------------------------------------------------
+ * Checkout "deliver to my billing address" toggle
+ *
+ * The same-as-billing checkbox lives inside its <label> so it picks up the
+ * shared checkbox skin above (it is a real native checkbox, not a visually
+ * hidden peer). Because it is therefore not a previous sibling of the delivery
+ * fields, neither Tailwind's `peer-*` nor `has-*` variants can reach them; a
+ * panel-scoped `:has()` rule collapses the delivery fields when it is checked,
+ * with no JavaScript. `:has()` is part of the supported browser baseline and is
+ * already used elsewhere in the theme (the `has-[:checked]:` address cards).
+ * -------------------------------------------------------------------------- */
+.checkout__panel:has(.checkout__same-cb:checked) .checkout__delivery-body {
+    display: none;
+}
+
+/* ----------------------------------------------------------------------------
+ * Hidden scrollbar — the product gallery thumbnail rail
+ *
+ * Tailwind ships no core utility for suppressing a native scrollbar, so this is
+ * a targeted custom rule (docs/styling.md §10.4). The rail's own scroll
+ * arrows replace the scrollbar on both axes (up/down in the tablet+ vertical
+ * column, left/right in the horizontal strip on phones).
+ * -------------------------------------------------------------------------- */
+.product-gallery__thumbs {
+    scrollbar-width: none;
+}
+
+.product-gallery__thumbs::-webkit-scrollbar {
+    display: none;
+}
+
+
+/* ----------------------------------------------------------------------------
+ * Catalog export — progress indicator
+ *
+ * The account catalog export generates on a queued job; while it runs the page
+ * shows a processing panel (partials rendered in pages/account/catalog-export)
+ * with a spinning icon and an indeterminate progress bar. Tailwind ships no
+ * indeterminate-bar utility, so the animation lives here. Colors read the
+ * theme's --color-primary token so tenant branding recolors it automatically.
+ * -------------------------------------------------------------------------- */
+.catalog-export-spinner svg {
+    animation: catalog-export-spin 0.9s linear infinite;
+    transform-origin: center;
+}
+
+.catalog-export-progress {
+    position: relative;
+    height: 4px;
+    border-radius: 9999px;
+    overflow: hidden;
+    background-color: color-mix(in srgb, var(--color-primary, #087a55) 18%, transparent);
+}
+
+.catalog-export-progress__bar {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 40%;
+    border-radius: 9999px;
+    background-color: var(--color-primary, #087a55);
+    animation: catalog-export-indeterminate 1.25s ease-in-out infinite;
+}
+
+@keyframes catalog-export-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes catalog-export-indeterminate {
+    0% {
+        left: -40%;
+        width: 40%;
+    }
+    50% {
+        left: 30%;
+        width: 55%;
+    }
+    100% {
+        left: 100%;
+        width: 40%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .catalog-export-spinner svg,
+    .catalog-export-progress__bar {
+        animation-duration: 0s;
+    }
+
+    .catalog-export-progress__bar {
+        left: 0;
+        width: 100%;
+        opacity: 0.6;
+    }
+}
+
+/* ============================================================================
+ * Kontor layout rules
+ *
+ * Structural styles only. Colours come from the tokens, so the Appearance
+ * settings of the store, dark mode and per-customer branding keep working.
+ * ============================================================================ */
+
+/* ---- Header: main bar ---------------------------------------------------- */
+.storefront-header__bar {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+.storefront-header__brand .storefront-logo {
+    max-height: 2.75rem;
+}
+
+/* Search field with an attached submit button. */
+.kontor-search__field {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.kontor-search__input {
+    width: 100%;
+    height: 3rem;
+    border: 2px solid var(--color-primary);
+    border-right-width: 0;
+    border-radius: var(--brand-radius, 0.375rem) 0 0 var(--brand-radius, 0.375rem);
+}
+.kontor-search__input:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+.kontor-search__submit {
+    flex: none;
+    height: 3rem;
+    min-width: 3rem;
+    border-radius: 0 var(--brand-radius, 0.375rem) var(--brand-radius, 0.375rem) 0;
+}
+
+/* Cart link reads as the main action of the bar. */
+.storefront-header .mini-cart__link {
+    min-height: 2.75rem;
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+    font-weight: 600;
+    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+.storefront-header .mini-cart__link:hover {
+    background-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+.storefront-header__action {
+    min-height: 2.75rem;
+}
+
+/* ---- Header: category bar in the primary colour -------------------------- */
+.kontor-nav {
+    background-color: var(--color-primary);
+    color: var(--color-primary-content);
+}
+.kontor-nav__bar {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    gap: 0.25rem;
+}
+.kontor-nav__all,
+.kontor-nav__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0 0.875rem;
+    color: inherit;
+    font-weight: 500;
+    white-space: nowrap;
+    text-decoration: none;
+}
+.kontor-nav__all {
+    padding: 0 1.125rem;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    background-color: color-mix(in srgb, var(--color-primary-content) 14%, transparent);
+}
+.kontor-nav__all::-webkit-details-marker {
+    display: none;
+}
+.kontor-nav__all:hover,
+.kontor-nav__link:hover {
+    color: inherit;
+    text-decoration: none;
+    background-color: color-mix(in srgb, var(--color-primary-content) 22%, transparent);
+}
+.kontor-nav__all:focus-visible,
+.kontor-nav__link:focus-visible {
+    outline: 2px solid var(--color-primary-content);
+    outline-offset: -4px;
+}
+.kontor-nav__links {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.kontor-nav__links::-webkit-scrollbar {
+    display: none;
+}
+.kontor-nav__link--end {
+    margin-left: auto;
+    font-weight: 600;
+}
+.kontor-nav__chevron {
+    transition: transform 0.15s ease;
+}
+.kontor-nav__mega[open] .kontor-nav__chevron {
+    transform: rotate(180deg);
+}
+/* The mega-menu panel sits on the card surface, so it takes the normal text
+ * colour again instead of the foreground of the bar. */
+.kontor-nav__panel {
+    color: var(--color-body);
+}
+
+/* ---- Product and category cards ----------------------------------------- */
+.product-card--grid .product-card__image {
+    aspect-ratio: 4 / 3;
+    background-color: var(--color-surface-card);
+}
+.product-card--grid .product-card__image img,
+.product-card--list .product-card__image img {
+    object-fit: contain;
+}
+.product-card__title {
+    font-weight: 600;
+}
+.product-card__favorite {
+    width: 2.5rem;
+    height: 2.5rem;
+}
+.category-card__image {
+    aspect-ratio: 4 / 3;
+}
+.add-to-cart__button,
+.add-to-cart--options,
+.add-to-cart--login {
+    min-height: 2.75rem;
+    font-weight: 600;
+}
+
+/* ---- Home page ----------------------------------------------------------- */
+.kontor-home__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+}
+.kontor-home__tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
